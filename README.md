@@ -56,66 +56,54 @@ As sentinels of the South Atlantic, these islands record not only the history of
 Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
 
 ├── data/
-
-│ ├── benthic_cover.csv # Mean cover per island/year
-
-│ ├── benthic_cover_photos.csv # Individual photo data (for temporal trends)
-
-│ └── environmental_data.csv # SST, PAR, Kd490, Wave, Chl-a, POC
-
+│   ├── raw/
+│   │   ├── benthic_complete_data.csv
+│   │   └── environment.csv
+│   └── processed/
+│       ├── benthic_cover_photos.csv
+│       ├── benthic_cover_transects.csv
+│       └── benthic_cover_summary.csv
 ├── code/
-
-│ ├── 01_ordination.Rmd # PCoA, PERMANOVA, envfit
-
-│ ├── 02_dbRDA.Rmd # Environmental drivers analysis
-
-│ ├── 03_temporal_trends.Rmd # LOESS + Mann-Kendall per island
-
-│ └── functions.R # Custom functions
-
+│   ├── 01_benthic_composition.R
+│   ├── 02_ordination.R
+│   ├── 03_dbRDA.R
+│   └── functions.R
 ├── results/
-
-│ ├── figures/
-
-│ │ ├── Figure_2_benthic_composition.tiff
-
-│ │ ├── Figure_3_PCoA_ordination.tiff
-
-│ │ ├── Figure_4_dbRDA_ordination.tiff
-
-│ │ ├── Figure_5_temporal_trends_SP.tiff
-
-│ │ ├── Figure_6_temporal_trends_RA.tiff
-
-│ │ ├── Figure_7_temporal_trends_FN.tiff
-
-│ │ └── Figure_8_temporal_trends_TR.tiff
-
-│ └── tables/
-
-│ ├── Table_1_PERMANOVA_results.csv
-
-│ ├── Table_2_envfit_results.csv
-
-│ ├── Table_3_indicator_species.csv
-
-│ └── Table_4_dbRDA_summary.csv
-
+│   ├── figures/
+│   │   ├── Figure_2_benthic_composition.png
+│   │   ├── Figure_2B_PCoA_ordination.png
+│   │   ├── Figure_3_dbRDA_ordination.png
+│   │   ├── Figure_4_temporal_trends_SP.png
+│   │   ├── Figure_5_temporal_trends_RA.png
+│   │   ├── Figure_6_temporal_trends_FN.png
+│   │   └── Figure_7_temporal_trends_TR.png
+│   └── tables/
+│       ├── Table_1_PERMANOVA_results.csv
+│       ├── Table_2_envfit_results.csv
+│       ├── Table_3_indicator_species.csv
+│       ├── Table_4_dbRDA_summary.csv
+│       ├── Table_5_dbRDA_axes_summary.csv
+│       ├── Table_6_env_variables_significance_sequential.csv
+│       ├── Table_6_env_variables_significance_marginal.csv
+│       ├── Table_VIF_results.csv
+│       ├── Table_rankindex_results.csv
+│       └── Table_S1_relative_abundance.csv
 └── README.md
 
 ## 🚀 How to Reproduce
 All analyses were performed in R version 4.2.3. Scripts should be run in numerical order:
-1. Clone this repository
-2. Open the R project file
-3. Run the scripts in numerical order:
-1. `01_ordination.Rmd` — Multivariate community analysis (PCoA, PERMANOVA, envfit)
-2. `02_dbRDA.Rmd` — Environmental drivers of benthic community structure
-3. `03_temporal_trends.Rmd` — LOESS smoothing and Mann-Kendall trend tests per island
+
+1. `01_benthic_composition.R` — Data processing and stacked bar plot
+2. `02_ordination.R` — PCoA, PERMANOVA, envfit, and indicator species
+3. `03_dbRDA.R` — Distance-based Redundancy Analysis
+4. `04_temporal_trends_*.R` — Temporal trends per island (LOESS + Mann-Kendall)
+
+Custom functions are available in `functions.R`.
 
 ## 📦 Dependencies
 
 - R (version ≥ 4.0.0)
-- Key packages: vegan, tidyverse, ggplot2, knitr
+- Key packages: "vegan", "ggplot2", "dplyr", "tidyr", "readr", "ggrepel", "indicspecies", "patchwork"
 
 ## 📝 Citation
 

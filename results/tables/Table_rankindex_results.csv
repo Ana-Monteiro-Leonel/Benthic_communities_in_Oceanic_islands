@@ -1,0 +1,6 @@
+Distance,Score
+manhattan,0.1793
+bray,0.1792
+kulczynski,0.1788
+euclidean,0.1748
+gower,0.1568

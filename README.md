@@ -55,11 +55,12 @@ As sentinels of the South Atlantic, these islands record not only the history of
 ## 📁 Repository Structure
 Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
 ├── data/
-│   ├── raw/                 # Data
-│   │   └── metadata/        # Data dictionary and sampling protocols
+│   ├── raw/                 # Original field data (immutable)
+│   ├── processed/           # Cleaned datasets in CSV format
+│   └── metadata/            # Data dictionary and sampling protocols
 ├── code/
-│   ├── 01_clean-data.R      # Data cleaning workflow
-│   ├── 02_analyze.R         # Statistical analyses and figures
+│   ├── 01_clean-data.Rmd    # Data cleaning workflow
+│   ├── 02_analyze.Rmd       # Statistical analyses and figures
 │   └── functions.R          # Custom R functions
 ├── results/
 │   ├── figures/             # Generated plots

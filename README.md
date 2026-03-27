@@ -56,38 +56,71 @@ As sentinels of the South Atlantic, these islands record not only the history of
 Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
 
 ├── data/
+
 │   ├── raw/
+
 │   │   ├── benthic_complete_data.csv
+
 │   │   └── environment.csv
+
 │   └── processed/
+
 │       ├── benthic_cover_photos.csv
+
 │       ├── benthic_cover_transects.csv
+
 │       └── benthic_cover_summary.csv
+
 ├── code/
+
 │   ├── 01_benthic_composition.R
+
 │   ├── 02_ordination.R
+
 │   ├── 03_dbRDA.R
+
 │   └── functions.R
+
 ├── results/
+
 │   ├── figures/
+
 │   │   ├── Figure_2_benthic_composition.png
+
 │   │   ├── Figure_2B_PCoA_ordination.png
+
 │   │   ├── Figure_3_dbRDA_ordination.png
+
 │   │   ├── Figure_4_temporal_trends_SP.png
+
 │   │   ├── Figure_5_temporal_trends_RA.png
+
 │   │   ├── Figure_6_temporal_trends_FN.png
+
 │   │   └── Figure_7_temporal_trends_TR.png
+
 │   └── tables/
+
 │       ├── Table_1_PERMANOVA_results.csv
+
 │       ├── Table_2_envfit_results.csv
+
 │       ├── Table_3_indicator_species.csv
+
 │       ├── Table_4_dbRDA_summary.csv
+
 │       ├── Table_5_dbRDA_axes_summary.csv
+
 │       ├── Table_6_env_variables_significance_sequential.csv
+
 │       ├── Table_6_env_variables_significance_marginal.csv
+
 │       ├── Table_VIF_results.csv
+
 │       ├── Table_rankindex_results.csv
+
 │       └── Table_S1_relative_abundance.csv
+
 └── README.md
 
 ## 🚀 How to Reproduce

@@ -54,8 +54,8 @@ As sentinels of the South Atlantic, these islands record not only the history of
 
 ## 📁 Repository Structure
 Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
+
    ├── data/
-   
    │   ├── raw/                 # Original field data (immutable)
    
    │   ├── processed/           # Cleaned datasets in CSV format

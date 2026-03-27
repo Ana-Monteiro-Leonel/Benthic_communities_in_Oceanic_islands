@@ -55,38 +55,62 @@ As sentinels of the South Atlantic, these islands record not only the history of
 ## 📁 Repository Structure
 Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
 
-   ├── data/
-   │   ├── raw/                 # Original field data (immutable)
-   
-   │   ├── processed/           # Cleaned datasets in CSV format
-   
-   │   └── metadata/            # Data dictionary and sampling protocols
-   
-   ├── code/
-   
-   │   ├── 01_clean-data.Rmd    # Data cleaning workflow
-   
-   │   ├── 02_analyze.Rmd       # Statistical analyses and figures
-   
-   │   └── functions.R          # Custom R functions
-   
-   ├── results/
-   
-   │   ├── figures/             # Generated plots
-   
-   │   └── tables/              # Summary tables
-   
-   └── docs/                    # Additional documentation
-   
+├── data/
 
+│ ├── benthic_cover.csv # Mean cover per island/year
+
+│ ├── benthic_cover_photos.csv # Individual photo data (for temporal trends)
+
+│ └── environmental_data.csv # SST, PAR, Kd490, Wave, Chl-a, POC
+
+├── code/
+
+│ ├── 01_ordination.Rmd # PCoA, PERMANOVA, envfit
+
+│ ├── 02_dbRDA.Rmd # Environmental drivers analysis
+
+│ ├── 03_temporal_trends.Rmd # LOESS + Mann-Kendall per island
+
+│ └── functions.R # Custom functions
+
+├── results/
+
+│ ├── figures/
+
+│ │ ├── Figure_2_benthic_composition.tiff
+
+│ │ ├── Figure_3_PCoA_ordination.tiff
+
+│ │ ├── Figure_4_dbRDA_ordination.tiff
+
+│ │ ├── Figure_5_temporal_trends_SP.tiff
+
+│ │ ├── Figure_6_temporal_trends_RA.tiff
+
+│ │ ├── Figure_7_temporal_trends_FN.tiff
+
+│ │ └── Figure_8_temporal_trends_TR.tiff
+
+│ └── tables/
+
+│ ├── Table_1_PERMANOVA_results.csv
+
+│ ├── Table_2_envfit_results.csv
+
+│ ├── Table_3_indicator_species.csv
+
+│ └── Table_4_dbRDA_summary.csv
+
+└── README.md
 
 ## 🚀 How to Reproduce
-
+All analyses were performed in R version 4.2.3. Scripts should be run in numerical order:
 1. Clone this repository
 2. Open the R project file
 3. Run the scripts in numerical order:
-   - `code/01_clean-data.Rmd`
-   - `code/02_analyze.Rmd`
+1. `01_ordination.Rmd` — Multivariate community analysis (PCoA, PERMANOVA, envfit)
+2. `02_dbRDA.Rmd` — Environmental drivers of benthic community structure
+3. `03_temporal_trends.Rmd` — LOESS smoothing and Mann-Kendall trend tests per island
 
 ## 📦 Dependencies
 

@@ -15,12 +15,24 @@ The benthic community is essential to reef ecosystems, contributing to their bio
 - **Trindade Island** (TR)
 
 ## 🎯 Objective
-
-This study analyzes the composition and spatio-temporal structure of benthic reef communities on these islands and assesses which environmental variables better explain similarities or dissimilarities between sites.
+This study aims to:
+•	Quantify spatial and temporal variation in benthic community structure
+•	Identify environmental drivers shaping community composition
+•	Assess temporal trends in dominant benthic functional groups
 
 ## 📊 Methods
 
-Shallow reefs were sampled annually from 2013-2019 using photo-quadrats on semi-fixed transects. We estimated the cover of benthic organisms and classified them into morphofunctional groups.
+Shallow reefs were sampled annually between 2013-2019 using photo-quadrats collected along semi-fixed transects. 
+Benthic cover was:
+•	Identified at the image level
+•	Aggregated to the transect level (used as the sampling unit to avoid pseudoreplication)
+•	Grouped into morphofunctional categories
+Temporal trends were assessed using:
+•	LOESS smoothing for visualization
+•	Mann–Kendall trend test applied to observed (non-standardized) annual mean cover
+•	Sen’s slope estimator to quantify trend magnitude
+This approach ensures that trends reflect real ecological changes rather than artifacts of data standardization.
+
 
 ## 🔬 Key Results
 📊 Benthic Richness and Composition
@@ -37,15 +49,15 @@ TR (Trindade)	                35 taxa	              Macroalgae (~27%), EAM (16%)
 
 📈 Temporal Trajectories (2013-2019)
 Island	Trend	Key Observation
-SP	  EAM expansion	Progressive consolidation of epilithic algal matrix
-RA	  EAM expansion	Similar trajectory to SP
+SP	  Significant increase in macroalgae; Decline in zoanthids
+RA	  Consistent but non-significant trends
 FN	  Benthic decline	Episodic cyanobacterial blooms; corals remain resilient
-TR	  CCA increase	Shift toward calcareous algae dominance
+TR	  Consistent but non-significant trends
 
 🎯 Main Takeaways
 ✅ Island-specific trajectories: Each island follows its own benthic path
-✅ EAM expands in equatorial islands (SP and RA)
-✅ CCA increases in Trindade over time
+✅ MAL expands in SP
+✅ Algal reorganization (RA, TR)
 ✅ Corals resilient in Noronha despite environmental stress
 ✅ Wave power, not temperature, drives Trindade's benthic composition
 
@@ -72,71 +84,39 @@ Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
 │       └── benthic_cover_summary.csv
 
 ├── code/
-
 │   ├── 01_benthic_composition.R
-
 │   ├── 02_ordination.R
-
 │   ├── 03_dbRDA.R
-
-│   └── functions.R
+│   ├── 04_temporal_trends_SP_transect.R
+│   ├── 05_temporal_trends_RA_transect.R
+│   ├── 06_temporal_trends_FN_transect.R
+│   ├── 07_temporal_trends_TR_transect.R
+│   └── functions_transect.R
 
 ├── results/
-
 │   ├── figures/
-
-│   │   ├── Figure_2_benthic_composition.png
-
-│   │   ├── Figure_2B_PCoA_ordination.png
-
-│   │   ├── Figure_3_dbRDA_ordination.png
-
-│   │   ├── Figure_4_temporal_trends_SP.png
-
-│   │   ├── Figure_5_temporal_trends_RA.png
-
-│   │   ├── Figure_6_temporal_trends_FN.png
-
-│   │   └── Figure_7_temporal_trends_TR.png
-
 │   └── tables/
-
-│       ├── Table_1_PERMANOVA_results.csv
-
-│       ├── Table_2_envfit_results.csv
-
-│       ├── Table_3_indicator_species.csv
-
-│       ├── Table_4_dbRDA_summary.csv
-
-│       ├── Table_5_dbRDA_axes_summary.csv
-
-│       ├── Table_6_env_variables_significance_sequential.csv
-
-│       ├── Table_6_env_variables_significance_marginal.csv
-
-│       ├── Table_VIF_results.csv
-
-│       ├── Table_rankindex_results.csv
-
-│       └── Table_S1_relative_abundance.csv
 
 └── README.md
 
 ## 🚀 How to Reproduce
+⚠️ Important: Set your working directory to the project root before running scripts.
+Example:
+setwd("path/to/Benthic_communities_in_Southwestern_Atlantic_oceanic_islands")
+
 All analyses were performed in R version 4.2.3. Scripts should be run in numerical order:
 
 1. `01_benthic_composition.R` — Data processing and stacked bar plot
 2. `02_ordination.R` — PCoA, PERMANOVA, envfit, and indicator species
 3. `03_dbRDA.R` — Distance-based Redundancy Analysis
-4. `04_temporal_trends_*.R` — Temporal trends per island (LOESS + Mann-Kendall)
+4. `04_07_temporal_trends_*_transect.R` — Temporal trends per island (LOESS + Mann-Kendall)
 
-Custom functions are available in `functions.R`.
+Custom functions are available in `functions_transect.R`.
 
 ## 📦 Dependencies
 
 - R (version ≥ 4.0.0)
-- Key packages: "vegan", "ggplot2", "dplyr", "tidyr", "readr", "ggrepel", "indicspecies", "patchwork"
+- Key packages: "vegan", "ggplot2", "dplyr", "tidyr", "readr", "ggrepel", "indicspecies", "patchwork", "zyp"
 
 ## 📝 Citation
 

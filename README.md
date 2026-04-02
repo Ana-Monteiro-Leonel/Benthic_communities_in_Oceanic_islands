@@ -29,7 +29,7 @@ Benthic cover was:
 •	Grouped into morphofunctional categories
 Temporal trends were assessed using:
 •	LOESS smoothing for visualization
-•	Mann–Kendall trend test applied to observed (non-standardized) annual mean cover
+•	Mann–Kendall trend test applied to observed (non-standardized) annual mean cover values derived from transect-level aggegation, ensuring independence among observations
 •	Sen’s slope estimator to quantify trend magnitude
 This approach ensures that trends reflect real ecological changes rather than artifacts of data standardization.
 

@@ -13,18 +13,46 @@
 #   - results/tables/Table_SP_trend_summary.csv
 ################################################################################
 
+# Set working directory to project root ####
+# This script tries to find the project root automatically.
+# If it fails, adjust the path below to your local setup.
+project_root <- "C:/Users/Ana Leonel/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands"
+
+if (dir.exists(project_root)) {
+  setwd(project_root)
+  cat("Working directory set to:", getwd(), "\n")
+} else {
+  # Try to find project root by looking for code/functions_transect.R
+  test_dir <- getwd()
+  found <- FALSE
+  for (i in 1:5) {
+    if (file.exists(file.path(test_dir, "code/functions_transect.R"))) {
+      setwd(test_dir)
+      found <- TRUE
+      cat("Working directory automatically set to:", getwd(), "\n")
+      break
+    }
+    test_dir <- dirname(test_dir)
+  }
+  if (!found) {
+    stop("Could not find project root. Please set 'project_root' manually.\n",
+         "Current working directory: ", getwd(), "\n",
+         "Expected project path: C:/Users/Ana Leonel/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands")
+  }
+}
+
+# Verify functions file exists
+if (!file.exists("code/functions_transect.R")) {
+  stop("functions_transect.R not found in code/ directory. 
+       Please check your working directory.")
+}
+
 # 1. Load packages ####
 library(ggplot2)
 library(dplyr)
 library(zyp)
 library(tidyr)
 library(patchwork)
-
-# NOTE:
-# Set the working directory to the project root before running this script.
-# Otherwise, relative paths (e.g., "code/functions_transect.R") will not work.
-# Example:
-# setwd("path/to/Benthic_communities_in_Oceanic_islands")
 
 # 2. Source functions and global settings ####
 source("code/functions_transect.R")
@@ -41,34 +69,33 @@ df_bio_sp <- read.csv("data/raw/benthic_complete_data.csv") %>%
       TRUE ~ categoryid
     )
   ) %>%
-    # Sum cover by image
-    group_by(island, sites, year, transect, image, group) %>%
-    summarise(cover = sum(coverpercategory), .groups = "drop") %>%
+  # Sum cover by image
+  group_by(island, sites, year, transect, image, group) %>%
+  summarise(cover = sum(coverpercategory), .groups = "drop") %>%
   
   # Aggregate by transect
-    group_by(island, sites, year, transect, group) %>%
-      summarise(
-      cover = mean(cover, na.rm = TRUE),
-      sd_cover = sd(cover, na.rm = TRUE),   # optional (useful for variability metrics)
-      n_images = n(),
-      .groups = "drop"
-      ) %>%
-      ungroup() %>%
-      mutate(
-      year = as.numeric(year),
-      # Coefficient of variation (relative variability)
-      cv = ifelse(cover > 0, sd_cover / cover, NA) 
-      )
+  group_by(island, sites, year, transect, group) %>%
+  summarise(
+    cover = mean(cover, na.rm = TRUE),
+    sd_cover = sd(cover, na.rm = TRUE),
+    n_images = n(),
+    .groups = "drop"
+  ) %>%
+  ungroup() %>%
+  mutate(
+    year = as.numeric(year),
+    cv = ifelse(cover > 0, sd_cover / cover, NA)
+  )
 
- # Check
+# Check sampling effort
 sampling_effort <- df_bio_sp %>%
   group_by(group, year) %>%
   summarise(n_transects = n(), .groups = "drop")
 
 write.csv(sampling_effort, "results/tables/Table_SP_sampling_effort.csv", 
           row.names = FALSE)
-   
-  # 4. Select top 4 groups with highest median cover ####
+
+# 4. Select top 4 groups with highest median cover ####
 median_cover <- df_bio_sp %>%
   group_by(group) %>%
   summarise(
@@ -78,10 +105,10 @@ median_cover <- df_bio_sp %>%
     .groups = 'drop'
   ) %>%
   arrange(desc(median_cover))
-  write.csv(median_cover, "results/tables/Table_SP_median_cover.csv")
+write.csv(median_cover, "results/tables/Table_SP_median_cover.csv")
 
-  cat("\n=== Median cover per group ===\n")
-  print(median_cover)
+cat("\n=== Median cover per group ===\n")
+print(median_cover)
 
 # Select top 4 groups
 top_groups <- median_cover %>%
@@ -134,11 +161,17 @@ if(length(results) > 0) {
     plot_annotation(title = NULL,
                     theme = theme(plot.title = element_text(hjust = 0.5, face = "bold")))
   
+  combined_plot <- combined_plot +
+    theme(
+      plot.margin = margin(5, 5, 5, 5),
+      panel.spacing = unit(0.3, "lines")
+    )
+  
   # Save outputs
   ggsave("results/figures/Figure_4_temporal_trends_SP.png", combined_plot, 
-         width = 10, height = 8, dpi = 300)
+         width = 9, height = 7, dpi = 600)
   ggsave("results/figures/Figure_4_temporal_trends_SP.tiff", combined_plot, 
-         width = 10, height = 8, dpi = 300, compression = "lzw")
+         width = 9, height = 7, dpi = 600, compression = "lzw")
   
   print(combined_plot)
 }
@@ -184,7 +217,7 @@ trend_summary <- data.frame(
   Range = sapply(results, function(x) round(x$range, 2)),
   
   stringsAsFactors = FALSE
-  )
+)
 
 write.csv(trend_summary, "results/tables/Table_SP_trend_summary.csv", row.names = FALSE)
 
@@ -208,3 +241,9 @@ for(g in names(results)) {
 
 cat("\nAnalysis complete!\n")
 
+# 10. Print session info for reproducibility ####
+sessionInfo()
+
+################################################################################
+# End of script
+################################################################################                         

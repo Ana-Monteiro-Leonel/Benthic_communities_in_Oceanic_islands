@@ -17,12 +17,31 @@
 #   - results/tables/Table_S1_relative_abundance.csv
 ################################################################################
 
-# Set working directory (adjust as needed) ####
-# Set this to the root of your repository
-setwd("C:/Users/Ana Monteiro/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands")
+# Set working directory to project root ####
+# This script tries to find the project root automatically.
+# If it fails, adjust the path below to your local setup.
+project_root <- "C:/Users/Ana Monteiro/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands"
 
-# Check current directory
-getwd()
+if (dir.exists(project_root)) {
+  setwd(project_root)
+} else {
+  # Try to find project root by looking for data/raw directory
+  test_dir <- getwd()
+  found <- FALSE
+  for (i in 1:5) {
+    if (file.exists(file.path(test_dir, "data/raw/benthic_complete_data.csv"))) {
+      setwd(test_dir)
+      found <- TRUE
+      break
+    }
+    test_dir <- dirname(test_dir)
+  }
+  if (!found) {
+    stop("Could not find project root. Please set 'project_root' manually.")
+  }
+}
+
+cat("Working directory set to:", getwd(), "\n")
 
 # Check and install required packages ####
 required_packages <- c("dplyr", "ggplot2", "tidyr", "readr")

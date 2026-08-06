@@ -16,9 +16,10 @@ The benthic community is essential to reef ecosystems, contributing to their bio
 
 ## 🎯 Objective
 This study aims to:
-•	Quantify spatial and temporal variation in benthic community structure
-•	Identify environmental drivers shaping community composition
-•	Assess temporal trends in dominant benthic functional groups
+•	Quantify spatial and temporal variation in benthic community structure across four Southwestern Atlantic oceanic islands (SP, RA, FN, TR)
+•	Identify environmental drivers (wave power, SST, PAR, POC) shaping community composition using multivariate analyses (PERMANOVA, PCoA, dbRDA)
+•	Assess temporal trends (2013-2019) in dominant benthic functional groups using Mann-Kendall tests
+• Identify indicator taxa characteristic of each island
 
 ## 📊 Methods
 
@@ -27,6 +28,14 @@ Benthic cover was:
 •	Identified at the image level
 •	Aggregated to the transect level (used as the sampling unit to avoid pseudoreplication)
 •	Grouped into morphofunctional categories
+
+**Community composition analyses** were based on transect-level abundance data and included:
+- PERMANOVA (vegan::adonis2) to test for differences among islands, years, and their interaction
+- PCoA (vegan::cmdscale) for ordination
+- envfit to correlate benthic groups with ordination axes
+- Indicator Species Analysis (indicspecies) to identify taxa characteristic of each island
+- Distance-based Redundancy Analysis (dbRDA) to identify environmental drivers (wave, SST, PAR, POC)
+
 Temporal trends were assessed using:
 •	LOESS smoothing for visualization
 •	Mann–Kendall trend test applied to observed (non-standardized) annual mean cover values derived from transect-level aggegation, ensuring independence among observations
@@ -107,16 +116,17 @@ setwd("path/to/Benthic_communities_in_Southwestern_Atlantic_oceanic_islands")
 All analyses were performed in R version 4.2.3. Scripts should be run in numerical order:
 
 1. `01_benthic_composition.R` — Data processing and stacked bar plot
-2. `02_ordination.R` — PCoA, PERMANOVA, envfit, and indicator species
+2. `02_ordination.R` — PCoA, PERMANOVA (island, year, interaction, and site-stratified), envfit, and indicator species
 3. `03_dbRDA.R` — Distance-based Redundancy Analysis
 4. `04_07_temporal_trends_*_transect.R` — Temporal trends per island (LOESS + Mann-Kendall)
 
 Custom functions are available in `functions_transect.R`.
+Note: Scripts `01` to `03` cover community composition analyses (including PERMANOVA, PCoA, dbRDA, and indicator species). Scripts `04` to `07` cover temporal trend analyses for each island (SP, RA, FN, TR). Custom functions are available in `functions_transect.R`.
 
 ## 📦 Dependencies
 
 - R (version ≥ 4.0.0)
-- Key packages: "vegan", "ggplot2", "dplyr", "tidyr", "readr", "ggrepel", "indicspecies", "patchwork", "zyp"
+- Key packages: "vegan", "ggplot2", "dplyr", "tidyr", "readr", "ggrepel", "indicspecies", "patchwork", "zyp", "zoo"
 
 ## 📝 Citation
 

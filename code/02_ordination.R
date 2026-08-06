@@ -5,22 +5,59 @@
 # Description: 
 #   This script performs multivariate analyses of benthic community structure:
 #   1. Load benthic complete data (image-level)
-#   2. Aggregate to island × year level (mean cover per group)
+#   2. Aggregate to transect level (mean cover per group)
 #   3. Hellinger transformation of benthic cover data
-#   4. Calculation of Gower distance matrix
-#   5. PERMANOVA to test differences among islands
+#   4. Calculation of Bray-Curtis distance matrix
+#   5. PERMANOVA to test differences among islands, years, and their interaction
 #   6. Beta dispersion analysis (homogeneity of variances)
 #   7. Principal Coordinates Analysis (PCoA) ordination
 #   8. envfit to project benthic groups onto ordination space
 #   9. Indicator species analysis
-# Data structure: each point = island × year combination
+# Data structure:
+#   Each point = transect (sampling unit)
+#   Transects nested within sites, islands, and sampled years
 # Outputs:
 #   - results/figures/Figure_2B_PCoA_ordination.png
 #   - results/figures/Figure_2B_PCoA_ordination.tiff
 #   - results/tables/Table_1_PERMANOVA_results.csv
 #   - results/tables/Table_2_envfit_results.csv
 #   - results/tables/Table_3_indicator_species.csv
+#   - data/processed/ordination_objects.RData
 ################################################################################
+
+# Set working directory to project root ####
+# This script tries to find the project root automatically.
+# If it fails, adjust the path below to your local setup.
+project_root <- "C:/Users/Ana Monteiro/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands"
+
+if (dir.exists(project_root)) {
+  setwd(project_root)
+  cat("Working directory set to:", getwd(), "\n")
+} else {
+  # Try to find project root by looking for data/raw directory
+  test_dir <- getwd()
+  found <- FALSE
+  for (i in 1:5) {
+    if (file.exists(file.path(test_dir, "data/raw/benthic_complete_data.csv"))) {
+      setwd(test_dir)
+      found <- TRUE
+      cat("Working directory automatically set to:", getwd(), "\n")
+      break
+    }
+    test_dir <- dirname(test_dir)
+  }
+  if (!found) {
+    stop("Could not find project root. Please set 'project_root' manually.\n",
+         "Current working directory: ", getwd(), "\n",
+         "Expected project path: C:/Users/Ana Monteiro/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands")
+  }
+}
+
+# Verify data file exists
+if (!file.exists("data/raw/benthic_complete_data.csv")) {
+  stop("benthic_complete_data.csv not found in data/raw/ directory. 
+       Please check your working directory.")
+}
 
 # 1. Load packages ####
 required_packages <- c("vegan", "ggplot2", "tidyverse", "dplyr", "ggrepel", "indicspecies", "tidyr")
@@ -65,102 +102,170 @@ grouped_data <- complete_data %>%
     .groups = "drop"
   )
 
-# 4. Aggregate to island × year level ####
-# Calculate mean cover per group for each island and year
-biotic_yearly <- grouped_data %>%
-  group_by(island, year, group) %>%
+# 4. Aggregate to transect level ####
+biotic_transect <- grouped_data %>%
+  group_by(island, year, sites, transect, group) %>%
   summarise(
     mean_cover = mean(cover_per_group, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  # Standardize island names
-  mutate(island = recode(island,
-                         "trindade" = "TR",
-                         "noronha" = "FN",
-                         "rocas" = "RA",
-                         "stpauls_rocks" = "SP"))
+  mutate(
+    island = recode(island,
+                    "trindade" = "TR",
+                    "noronha" = "FN",
+                    "rocas" = "RA",
+                    "stpauls_rocks" = "SP")
+  )
 
-# Check unique combinations
-cat("Number of island × year combinations:", 
-    n_distinct(paste(biotic_yearly$island, biotic_yearly$year)), "\n")
+cat("Number of transects:",
+    n_distinct(paste(biotic_transect$island,
+                     biotic_transect$year,
+                     biotic_transect$sites,
+                     biotic_transect$transect)),
+    "\n")
 
-print("Available combinations:")
-biotic_yearly %>%
-  distinct(island, year) %>%
-  arrange(island, year) %>%
-  print()
+# 5. Convert to wide format (transects × benthic groups) ####
+biotic_wide <- biotic_transect %>%
+  select(island, year, sites, transect, group, mean_cover) %>%
+  pivot_wider(
+    names_from = group,
+    values_from = mean_cover,
+    values_fill = 0
+  ) %>%
+  mutate(
+    sample_id = paste(island,
+                      year,
+                      sites,
+                      transect,
+                      sep = "_")
+  )
 
-# 5. Convert to wide format (sites = island_year, columns = benthic groups) ####
-biotic_wide <- biotic_yearly %>%
-  select(island, year, group, mean_cover) %>%
-  pivot_wider(names_from = group, values_from = mean_cover, values_fill = 0) %>%
-  mutate(site = paste(island, year, sep = "_")) %>%
-  column_to_rownames("site") %>%
-  select(-island, -year)
+biotic_meta <- biotic_wide %>%
+  select(sample_id,
+         island,
+         year,
+         sites,
+         transect)
 
-# Create metadata for sites
-biotic_meta <- biotic_yearly %>%
-  distinct(island, year) %>%
-  mutate(site = paste(island, year, sep = "_")) %>%
-  arrange(site)
+community_matrix <- biotic_wide %>%
+  column_to_rownames("sample_id") %>%
+  select(-island,
+         -year,
+         -sites,
+         -transect)
 
 # Define group order for later
 group_order <- c("EAM", "MAL", "CCA", "ACA", "SCL", "ABI", "INV", "ZOA", "CYA", "SUS")
+
 # Ensure all groups are present, add missing columns if necessary
 for (grp in group_order) {
-  if (!grp %in% colnames(biotic_wide)) {
-    biotic_wide[[grp]] <- 0
+  if (!grp %in% colnames(community_matrix)) {
+    community_matrix[[grp]] <- 0
   }
 }
+
 # Reorder columns
-biotic_wide <- biotic_wide[, group_order]
+community_matrix <- community_matrix[, group_order]
 
 # 6. Hellinger transformation ####
-biotic_hell <- decostand(biotic_wide, method = "hellinger")
+biotic_hell <- decostand(community_matrix, method = "hellinger")
 
 # 7. Calculate distance matrix ####
-# Gower distance (identified as best in rankindex analysis)
-dist_matrix <- vegdist(biotic_hell, method = "gower")
+# Bray-Curtis distance on Hellinger-transformed data
+dist_matrix <- vegdist(biotic_hell, method = "bray")
+
+# Save ordination objects for reproducibility
+save(
+  community_matrix,
+  biotic_meta,
+  biotic_hell,
+  dist_matrix,
+  file = "data/processed/ordination_objects.RData"
+)
 
 # 8. PERMANOVA ####
-permanova <- adonis2(dist_matrix ~ biotic_meta$island, permutations = 999)
-print(permanova)
+biotic_meta$island <- factor(biotic_meta$island)
+biotic_meta$year <- factor(biotic_meta$year)
+
+# PERMANOVA: spatial effects - Do communities differ among islands?
+perm_island <- adonis2(
+  dist_matrix ~ island,
+  data = biotic_meta,
+  permutations = 999
+)
+print(perm_island)
+
+# PERMANOVA: temporal effects - Are there differences among years?
+perm_year <- adonis2(
+  dist_matrix ~ year,
+  data = biotic_meta,
+  permutations = 999
+)
+print(perm_year)
+
+# PERMANOVA: interaction island/year
+perm_interaction <- adonis2(
+  dist_matrix ~ island * year,
+  data = biotic_meta,
+  permutations = 999,
+  by = "terms"
+)
+print(perm_interaction)
+
+# PERMANOVA restricted within sites (nested design)
+perm_site <- adonis2(
+  dist_matrix ~ island * year,
+  data = biotic_meta,
+  permutations = 999,
+  strata = biotic_meta$sites,
+  by = "terms"
+)
+print(perm_site)
 
 # Save PERMANOVA results
 permanova_results <- data.frame(
-  Source = rownames(permanova),
-  DF = permanova$Df,
-  SumOfSqs = permanova$SumOfSqs,
-  R2 = permanova$R2,
-  F = permanova$F,
-  P = permanova$`Pr(>F)`
+  Source = rownames(perm_interaction),
+  DF = perm_interaction$Df,
+  SumOfSqs = perm_interaction$SumOfSqs,
+  R2 = perm_interaction$R2,
+  F = perm_interaction$F,
+  P = perm_interaction$`Pr(>F)`
 )
 write_csv(permanova_results, "results/tables/Table_1_PERMANOVA_results.csv")
 
 # 9. Beta dispersion (homogeneity of variances) ####
-beta_disp <- betadisper(dist_matrix, group = biotic_meta$island)
+beta_disp <- betadisper(dist_matrix, group = biotic_meta$island, add = TRUE)
 anova_beta <- anova(beta_disp)
 print(anova_beta)
 
 # 10. PCoA ordination ####
-pcoa <- cmdscale(dist_matrix, eig = TRUE, k = 2)
-pcoa_sites <- data.frame(pcoa$points[, 1:2])
+pcoa <- wcmdscale(dist_matrix, eig = TRUE, add = TRUE, k = 2)
+pcoa_sites <- data.frame(
+  pcoa$points[, 1:2]
+)
 colnames(pcoa_sites) <- c("PCoA1", "PCoA2")
-pcoa_sites$island <- biotic_meta$island
-pcoa_sites$year <- biotic_meta$year
-pcoa_sites$site <- biotic_meta$site
+
+pcoa_sites <- cbind(
+  pcoa_sites,
+  biotic_meta
+)
 
 # Define island order
 pcoa_sites$island <- factor(pcoa_sites$island, levels = c("SP", "RA", "FN", "TR"))
 
-# Variance explained
-var_exp1 <- round(pcoa$eig[1] / sum(pcoa$eig) * 100, 1)
-var_exp2 <- round(pcoa$eig[2] / sum(pcoa$eig) * 100, 1)
+# Variance explained (using only positive eigenvalues)
+positive_eig <- pcoa$eig[pcoa$eig > 0]
+var_exp1 <- round(pcoa$eig[1] / sum(positive_eig) * 100, 1)
+var_exp2 <- round(pcoa$eig[2] / sum(positive_eig) * 100, 1)
 
 cat("PCoA variance explained:", var_exp1, "% and", var_exp2, "%\n")
 
 # 11. envfit: project benthic groups onto PCoA ####
-env_fit <- envfit(pcoa, biotic_hell, permutations = 999)
+env_fit <- envfit(
+  pcoa_sites[, c("PCoA1", "PCoA2")],
+  community_matrix,
+  permutations = 999
+)
 envfit_vectors <- as.data.frame(scores(env_fit, display = "vectors"))
 envfit_vectors$species <- rownames(envfit_vectors)
 envfit_vectors$r <- env_fit$vectors$r
@@ -178,10 +283,10 @@ print(sig_vectors)
 write_csv(envfit_vectors, "results/tables/Table_2_envfit_results.csv")
 
 # 12. Indicator species analysis ####
-# Prepare data for indicator analysis (island × year level)
-indicator_data <- biotic_wide %>%
-  rownames_to_column("site") %>%
-  left_join(biotic_meta, by = "site")
+# Prepare data for indicator analysis (transect level grouped by island)
+indicator_data <- community_matrix %>%
+  rownames_to_column("sample_id") %>%
+  left_join(biotic_meta, by = "sample_id")
 
 # Calculate indicator values
 indicator_values <- multipatt(indicator_data[, group_order], 
@@ -218,26 +323,27 @@ pcoa_plot <- ggplot() +
   scale_shape_manual(values = island_shapes) +
   scale_color_manual(values = island_colors) +
   
-  # Add year labels
-  geom_text_repel(data = pcoa_sites, 
-                  aes(x = PCoA1, y = PCoA2, label = year),
-                  size = 2.5, color = "gray30", max.overlaps = 10) +
-  
   # Significant benthic vectors
   geom_segment(data = sig_vectors, 
-               aes(x = 0, xend = Dim1 * 0.25, y = 0, yend = Dim2 * 0.25),
-               color = "grey50", linewidth = 0.7, linetype = "dashed") +
-  geom_text_repel(data = sig_vectors, 
-                  aes(x = Dim1 * 0.27, y = Dim2 * 0.27, label = species),
-                  color = "grey30", size = 3.5, fontface = "bold",
-                  box.padding = 0.5, point.padding = 0.3,
-                  min.segment.length = 0, segment.color = "grey50") +
+               aes(x = 0,
+                   xend = PCoA1 * 0.25,
+                   y = 0,
+                   yend = PCoA2 * 0.25),
+               color = "grey50",
+               linewidth = 0.7,
+               linetype = "dashed") +
   
-  # PERMANOVA annotation
-  annotate("text", x = -0.2, y = 0.25, 
-           label = sprintf("PERMANOVA: F = %.1f, R² = %.2f, p = %.3f", 
-                           permanova$F[1], permanova$R2[1], permanova$`Pr(>F)`[1]),
-           color = "black", size = 3, fontface = "bold") +
+  geom_text_repel(data = sig_vectors, 
+                  aes(x = PCoA1 * 0.27,
+                      y = PCoA2 * 0.27,
+                      label = species),
+                  color = "grey30",
+                  size = 3.5,
+                  fontface = "bold",
+                  box.padding = 0.5,
+                  point.padding = 0.3,
+                  min.segment.length = 0,
+                  segment.color = "grey50") +
   
   # Axes
   labs(x = paste0("PCoA 1 (", var_exp1, "%)"),

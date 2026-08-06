@@ -19,6 +19,44 @@
 #   - results/tables/Table_VIF_results.csv
 ################################################################################
 
+# Set working directory to project root ####
+# This script tries to find the project root automatically.
+# If it fails, adjust the path below to your local setup.
+project_root <- "C:/Users/Ana Monteiro/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands"
+
+if (dir.exists(project_root)) {
+  setwd(project_root)
+  cat("Working directory set to:", getwd(), "\n")
+} else {
+  # Try to find project root by looking for data/raw directory
+  test_dir <- getwd()
+  found <- FALSE
+  for (i in 1:5) {
+    if (file.exists(file.path(test_dir, "data/raw/benthic_complete_data.csv"))) {
+      setwd(test_dir)
+      found <- TRUE
+      cat("Working directory automatically set to:", getwd(), "\n")
+      break
+    }
+    test_dir <- dirname(test_dir)
+  }
+  if (!found) {
+    stop("Could not find project root. Please set 'project_root' manually.\n",
+         "Current working directory: ", getwd(), "\n",
+         "Expected project path: C:/Users/Ana Monteiro/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands")
+  }
+}
+
+# Verify data files exist
+if (!file.exists("data/raw/benthic_complete_data.csv")) {
+  stop("benthic_complete_data.csv not found in data/raw/ directory. 
+       Please check your working directory.")
+}
+if (!file.exists("data/raw/environment.csv")) {
+  stop("environment.csv not found in data/raw/ directory. 
+       Please check your working directory.")
+}
+
 # 1. Load packages ####
 required_packages <- c("vegan", "ggplot2", "tidyverse", "dplyr", "ggrepel", "tidyr")
 for (pkg in required_packages) {
@@ -35,7 +73,7 @@ complete_data <- read.csv("data/raw/benthic_complete_data.csv")
 # 3. Load environmental data ####
 enviro_raw <- read.csv("data/raw/environment.csv")
 
-# 4. STANDARDIZE ISLAND NAMES ####
+# 4. Standardize island names ####
 complete_data <- complete_data %>%
   mutate(island = recode(island,
                          "trindade" = "TR",
@@ -112,12 +150,14 @@ biotic_mat <- df_clean %>%
   select(all_of(group_order)) %>%
   as.matrix()
 rownames(biotic_mat) <- df_clean$site
+
 # Select environmental variables (all with VIF < 10)
 env_vars <- c("wave", "SST", "PAR", "POC")
 enviro_mat <- df_clean %>%
   select(all_of(env_vars)) %>%
   as.matrix()
 rownames(enviro_mat) <- df_clean$site
+
 cat("\nBiotic matrix dimensions:", dim(biotic_mat), "\n")
 cat("Environmental matrix dimensions:", dim(enviro_mat), "\n")
 cat("\nNames row in biotic_mat:\n")
@@ -132,7 +172,7 @@ enviro_std <- decostand(enviro_mat, method = "standardize")
 cat("\nNames row in biotic_hell after transformation:\n")
 head(rownames(biotic_hell))
 
-# 12. SELECT BEST DISTANCE METRIC USING RANKINDEX ####
+# 12. Select best distance metric using rankindex ####
 cat("\n========================================\n")
 cat("Selecting Best Distance Metric\n")
 cat("========================================\n")
@@ -279,7 +319,7 @@ species_scores <- species_scores %>%
     dbRDA1 = dbRDA1 * 0.8,
     dbRDA2 = dbRDA2 * 0.8
   )
-cat("\nSpecies scores (correlações):\n")
+cat("\nSpecies scores (correlations):\n")
 print(species_scores)
 
 # Environmental vector scores
@@ -290,7 +330,6 @@ env_scores <- env_scores[, c("variable", "dbRDA1", "dbRDA2")]
 
 cat("\nEnvironmental scores:\n")
 print(env_scores)
-
 
 # 19. Calculate scaling factor for vectors ####
 max_site <- max(abs(sites_scores[, c("dbRDA1", "dbRDA2")]), na.rm = TRUE)
@@ -376,4 +415,3 @@ sessionInfo()
 ################################################################################
 # End of script
 ################################################################################
-

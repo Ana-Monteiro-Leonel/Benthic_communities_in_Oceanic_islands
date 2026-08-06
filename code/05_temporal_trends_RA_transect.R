@@ -14,18 +14,54 @@
 #   - results/tables/Table_RA_trend_summary.csv
 ################################################################################
 
+# 0. SET WORKING DIRECTORY ####
+
+
+# Set the working directory to the project root
+# IMPORTANT: Adjust this path to match your local setup
+project_root <- "C:/Users/Ana Leonel/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands"
+
+# Check if the directory exists
+if (dir.exists(project_root)) {
+  setwd(project_root)
+  cat("Working directory set to:", getwd(), "\n")
+} else {
+  # Try to find the project by going up from current directory
+  current_dir <- getwd()
+  test_dir <- current_dir
+  
+  # Try to find the project by looking for code/functions_transect.R
+  found <- FALSE
+  for (i in 1:5) {
+    if (file.exists(file.path(test_dir, "code/functions_transect.R"))) {
+      setwd(test_dir)
+      cat("Working directory automatically set to:", getwd(), "\n")
+      found <- TRUE
+      break
+    }
+    test_dir <- dirname(test_dir)
+  }
+  
+  if (!found) {
+    stop("Could not find project directory. Please set the path manually.\n",
+         "Current working directory: ", getwd(), "\n",
+         "Expected project path: C:/Users/Ana Leonel/OneDrive/Documentos/GitHub/Benthic_communities_in_Oceanic_islands")
+  }
+}
+
+# Verify we are in the correct directory
+if (!file.exists("code/functions_transect.R")) {
+  stop("functions_transect.R not found in code/ directory. 
+       Please check your working directory.")
+}
+
+
 # 1. Load packages ####
 library(ggplot2)
 library(dplyr)
 library(zyp)
 library(tidyr)
 library(patchwork)
-
-# NOTE:
-# Set the working directory to the project root before running this script.
-# Otherwise, relative paths (e.g., "code/functions_transect.R") will not work.
-# Example:
-# setwd("path/to/Benthic_communities_in_Oceanic_islands")
 
 # 2. Source functions and global settings ####
 source("code/functions_transect.R")
@@ -97,7 +133,7 @@ print(median_cover)
 selected_groups <- c("EAM", "MAL", "CCA", "ZOA")
 
 # Verify selected groups exist in data
-available_groups <- intersect(selected_groups, unique(df_bio_tr$group))
+available_groups <- intersect(selected_groups, unique(df_bio_ra$group))
 if(length(available_groups) < length(selected_groups)) {
   stop(paste("Missing groups in dataset:", 
              paste(setdiff(selected_groups, available_groups), collapse = ", ")))
@@ -236,3 +272,9 @@ for(g in names(results)) {
 
 cat("\nAnalysis complete!\n")
 
+# 10. Print session info for reproducibility ####
+sessionInfo()
+
+################################################################################
+# End of script
+################################################################################

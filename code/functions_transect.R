@@ -40,7 +40,7 @@ theme_mk_plots <- function() {
         panel.grid.major = element_line(linewidth = 0.5, colour = "grey95", 
                                         lineend = "butt"), 
         panel.background = element_blank(),
-        panel.border = element_rect(colour = "black", linewidth = 1, fill = NA),
+        panel.border = element_rect(colour = "black", linewidth = 0.4, fill = NA),
         strip.background = element_blank(),
         strip.text = element_blank(),
         axis.line.x.bottom = element_line(linewidth = 0, colour = "black", 
@@ -65,7 +65,7 @@ find_best_span <- function(data_year, span_values = seq(0.2, 1, by = 0.05)) {
   for(span in span_values) {
     
     warning_flag <- FALSE
-    # Captura warnings
+    # Capture warnings
     tryCatch({
       withCallingHandlers({
         model <- loess(cover ~ year, data = data_year, span = span,
@@ -78,13 +78,13 @@ find_best_span <- function(data_year, span_values = seq(0.2, 1, by = 0.05)) {
     }, error = function(e) {
       warning_flag <<- TRUE
     })
-    # Se não deu warning, retorna esse span
+    # If no warning, return this span
     if(!warning_flag) {
       return(span)
     }
   }
   
-  # Se TODOS deram warning, retorna NA ou valor padrão
+  # If ALL produce warnings, return NA or default value
   return(NA)
 }
 
@@ -135,7 +135,7 @@ analyze_trend <- function(data, group_name) {
   
   # Calculate data range
   data_range <- max(df_year$cover, na.rm = TRUE) - 
-                min(df_year$cover, na.rm = TRUE)
+    min(df_year$cover, na.rm = TRUE)
   
   # Avoid division by zero
   if(is.na(data_range) || data_range == 0) {
@@ -163,7 +163,7 @@ analyze_trend <- function(data, group_name) {
     mk_result = mk_result               # Keep full MK output for reference
   ))
 }
- 
+
 # 4. Create trend plot ####
 create_trend_plot <- function(result, group_name) {
   
@@ -179,9 +179,50 @@ create_trend_plot <- function(result, group_name) {
   max_y <- max(result$data_transect$cover, na.rm = TRUE)
   min_y <- min(result$data_transect$cover, na.rm = TRUE)
   range_y <- max_y - min_y
-  range_y_safe <- ifelse(is.na(range_y) || range_y == 0, 
-                         max(max_y * 0.1, 1), 
+  
+  # Avoid problems with very small ranges
+  range_y_safe <- ifelse(is.na(range_y) || range_y == 0,
+                         max(max_y * 0.1, 1),
                          range_y)
+  
+  # Proportional spacing between annotation lines
+  step <- 0.08 * range_y_safe
+  
+  # Two lines of statistics
+  annotation_y_tau   <- max_y + 1 * step
+  annotation_y_slope <- max_y + 2 * step
+  
+  # Group name on the right
+  annotation_y_group <- max_y + 2 * step
+  
+  # Upper y-axis limit = max_y + 3*step (space for annotations)
+  y_upper_limit <- max_y + 2.5 * step
+  y_lower_limit <- max(0, min_y - 0.03 * range_y_safe)
+  if (min_y < 2) {
+    y_lower_limit <- 0
+  }
+  
+  # CALCULATE Y-AXIS BREAKS - ONLY UP TO MAX DATA
+  # Find a round break close to max_y
+  if(max_y <= 10) {
+    break_step <- 2
+  } else if(max_y <= 25) {
+    break_step <- 5
+  } else if(max_y <= 50) {
+    break_step <- 10
+  } else {
+    break_step <- 20
+  }
+  
+  # Create break sequence from 0 to a round value close to max_y
+  y_breaks <- seq(ceiling(y_lower_limit / break_step) * break_step, 
+                  ceiling(max_y / break_step) * break_step, 
+                  by = break_step)
+  
+  # Ensure the last break doesn't exceed the limit where annotations start
+  # (i.e., don't show numbers in the annotation area)
+  y_breaks <- y_breaks[y_breaks <= max_y + 0.5 * step]
+  
   
   min_year <- min(result$data_transect$year, na.rm = TRUE)
   max_year <- max(result$data_transect$year, na.rm = TRUE)
@@ -194,20 +235,26 @@ create_trend_plot <- function(result, group_name) {
     geom_line(data = result$data_year, 
               aes(x = year, y = loess_pred),
               color = scales::alpha(group_color, 0.9), linewidth = 1) +
-    scale_x_continuous(breaks = seq(min(result$data_transect$year, na.rm = TRUE), 
-                       max(result$data_transect$year, na.rm = TRUE), by = 1)) +
-    labs(x = NULL, y = "Relative benthic cover (%)") +
+    scale_x_continuous(breaks = seq(min_year, max_year, by = 1)) +
+    scale_y_continuous(
+      limits = c(y_lower_limit, y_upper_limit),
+      breaks = y_breaks,  # ONLY BREAKS UP TO DATA
+      expand = expansion(mult = c(0.05, 0.05))
+    ) +
+    labs(x = NULL, y = "Relative benthic cover (% yr⁻¹)") +
     theme_mk_plots() +
-    annotate("text", x = min_year, y = max_y - 0.02 * range_y_safe, 
+    theme(plot.margin = margin(t = 20, r = 10, b = 10, l = 10)) +
+    annotate("text", x = min_year, y = annotation_y_tau, 
              label = paste0("Tau: ", round(result$tau, 2), " ", sig_label, 
                             " | Span: ", round(result$span_used, 2)), 
              color = group_color, fontface = "bold", size = 4, hjust = 0) +
-    annotate("text", x = min_year, y = max_y - 0.08 * range_y_safe, 
-             label = paste0("Slope: ", round(result$trend_slope, 2)),
+    annotate("text", x = min_year, y = annotation_y_slope, 
+             label = paste0("Slope: ", round(result$trend_slope, 2), "% yr⁻¹"),
              color = group_color, fontface = "bold", size = 4, hjust = 0) +
-    annotate("text", x = max_year, y = max_y - 0.02 * range_y_safe, 
+    annotate("text", x = max_year, y = annotation_y_group, 
              label = group_name, color = group_color, 
-             fontface = "bold", size = 6, hjust = 1)
+             fontface = "bold", size = 6, hjust = 1) + 
+    coord_cartesian(clip = "off")
 }
 
 # 5. Print detailed trend statistics ####
@@ -244,3 +291,4 @@ print_trend_stats <- function(result, group_name) {
                        ifelse(result$p_value < 0.05, "*", "ns")))
   cat("\nSignificance:", sig, "\n")
 }
+

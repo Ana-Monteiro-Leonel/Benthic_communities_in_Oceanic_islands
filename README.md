@@ -1,6 +1,6 @@
 # Benthic_communities_in_Oceanic_islands
 
-[![DOI](https://zenodo.org/badge/1185350135.svg)](https://doi.org/10.5281/zenodo.21890794)
+https://doi.org/10.5281/zenodo.21890794
 
 Data and R scripts for analyzing benthic communities across Southwestern Atlantic oceanic islands
 # Benthic communities in Southwestern Atlantic oceanic islands

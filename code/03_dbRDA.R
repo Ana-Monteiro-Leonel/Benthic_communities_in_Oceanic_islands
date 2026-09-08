@@ -69,7 +69,6 @@ options(scipen = 999)
 
 # 2. Load benthic complete data ####
 complete_data <- read.csv("data/raw/benthic_complete_data.csv")
-
 # 3. Load environmental data ####
 enviro_raw <- read.csv("data/raw/environment.csv")
 
@@ -374,9 +373,10 @@ dbRDA_plot <- ggplot() +
                   color = "firebrick", size = 3, fontface = "bold") +
   
   # Annotation with model statistics
-  annotate("text", x = -1.2, y = 1.3, 
-           label = sprintf("dbRDA: %s\nR²Adj. = %.2f\nGlobal p = %.3f", 
-                           best_dist, r2_adj, global_test$`Pr(>F)`[1]),
+  annotate("text", x = 1.5, y = 2, 
+           label = sprintf("Adj. R² = %.2f\nGlobal p = %.3f",
+                           r2_adj,
+                           global_test$`Pr(>F)`[1]),
            color = "black", size = 3, fontface = "bold", hjust = 0) +
   
   # Axes
@@ -390,7 +390,8 @@ dbRDA_plot <- ggplot() +
   theme(
     axis.text = element_text(color = "black", size = 10),
     axis.title = element_text(size = 12, face = "bold"),
-    legend.position = c(0.1, 0.15),
+    legend.position = "right",
+    legend.direction = "vertical",
     legend.title = element_blank(),
     legend.text = element_text(size = 10),
     legend.background = element_rect(fill = "white", color = NA),

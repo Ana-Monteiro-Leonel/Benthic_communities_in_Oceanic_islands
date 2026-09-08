@@ -1,27 +1,35 @@
-################################################################################
+##############################################################################
 # Script: 02_ordination.R
 # Author: Monteiro-Leonel, Ana C.
-# Date: 2026-03-27
-# Description: 
-#   This script performs multivariate analyses of benthic community structure:
-#   1. Load benthic complete data (image-level)
-#   2. Aggregate to transect level (mean cover per group)
-#   3. Hellinger transformation of benthic cover data
-#   4. Calculation of Bray-Curtis distance matrix
-#   5. PERMANOVA to test differences among islands, years, and their interaction
-#   6. Beta dispersion analysis (homogeneity of variances)
-#   7. Principal Coordinates Analysis (PCoA) ordination
-#   8. envfit to project benthic groups onto ordination space
-#   9. Indicator species analysis
+# Date: 2026-09-03
+
+#   
+# Description:
+#   Multivariate analyses of benthic community structure using
+#   18 benthic categories (17 biological categories + abiotic substrate).
+#
+#   1. Load image-level benthic cover data
+#   2. Recode original category codes into the 18-category dataset
+#   3. Aggregate benthic cover to transect level
+#   4. Apply Hellinger transformation
+#   5. Calculate Bray-Curtis dissimilarities
+#   6. PERMANOVA: island, year, and island × year
+#   7. Test multivariate dispersion among islands
+#   8. Principal Coordinates Analysis (PCoA)
+#   9. envfit of benthic categories onto the PCoA
+#  10. Indicator analysis of benthic categories among islands
+#
 # Data structure:
-#   Each point = transect (sampling unit)
-#   Transects nested within sites, islands, and sampled years
+#   Sampling unit = transect
+#   Images = subsamples within transects
+#   Transects are associated with sites, islands, and survey years
+#
 # Outputs:
 #   - results/figures/Figure_2B_PCoA_ordination.png
 #   - results/figures/Figure_2B_PCoA_ordination.tiff
 #   - results/tables/Table_1_PERMANOVA_results.csv
 #   - results/tables/Table_2_envfit_results.csv
-#   - results/tables/Table_3_indicator_species.csv
+#   - results/tables/Table_3_indicator_analysis.csv
 #   - data/processed/ordination_objects.RData
 ################################################################################
 
@@ -75,23 +83,19 @@ complete_data <- read.csv("data/raw/benthic_complete_data.csv")
 # Inspect data
 glimpse(complete_data)
 
-# 3. Recode fine-scale categories into benthic groups (same as Script 01) ####
+# 3. Recode original codes into the 18 benthic categories ####
 grouped_data <- complete_data %>%
   mutate(
     categoryid = as.character(categoryid),
     group = recode(categoryid, 
                    # Invertebrates
-                   "BRY" = "INV", "ECH" = "INV", "OTH" = "INV",
-                   # Macroalgae
-                   "CEN" = "MAL", "COR" = "MAL", "COT" = "MAL",
-                   "FIL" = "MAL", "FOL" = "MAL", "GLC" = "MAL",
-                   "SAR" = "MAL", "STO" = "MAL",
+                   "OTH" = "INV", "BRY" = "INV", 
                    # Turf/Epilithic Algal Matrix
                    "TUR" = "EAM",
                    # Scleractinian corals
                    "BSC" = "SCL", "ODI" = "SCL",
-                   # Suspensivores
-                   "TUN" = "SUS", "POR" = "SUS",
+                   # Sargassum
+                   "SAR" = "COR",
                    # Default: keep original categoryid
                    .default = categoryid
     )
@@ -124,7 +128,7 @@ cat("Number of transects:",
                      biotic_transect$transect)),
     "\n")
 
-# 5. Convert to wide format (transects × benthic groups) ####
+# 5. Convert to wide format (transects × benthic categories) ####
 biotic_wide <- biotic_transect %>%
   select(island, year, sites, transect, group, mean_cover) %>%
   pivot_wider(
@@ -154,18 +158,40 @@ community_matrix <- biotic_wide %>%
          -sites,
          -transect)
 
-# Define group order for later
-group_order <- c("EAM", "MAL", "CCA", "ACA", "SCL", "ABI", "INV", "ZOA", "CYA", "SUS")
+# Expected fine-scale benthic categories
+category_order <- c(
+  "ABI", "ACA", "CCA", "CEN", "COR", "COT",
+  "CYA", "EAM", "ECH", "FIL", "FOL", "GLC",
+  "INV", "POR", "SCL", "STO", "TUN", "ZOA"
+)
 
-# Ensure all groups are present, add missing columns if necessary
-for (grp in group_order) {
-  if (!grp %in% colnames(community_matrix)) {
-    community_matrix[[grp]] <- 0
+# Check for unexpected categories
+unexpected_categories <- setdiff(
+  colnames(community_matrix),
+  category_order
+)
+if (length(unexpected_categories) > 0) {
+  stop(
+    "Unexpected benthic categories found: ",
+    paste(unexpected_categories, collapse = ", ")
+  )
+}
+
+# Add categories absent from a particular dataset, if necessary
+for (cat in category_order) {
+  if (!cat %in% colnames(community_matrix)) {
+    community_matrix[[cat]] <- 0
   }
 }
 
-# Reorder columns
-community_matrix <- community_matrix[, group_order]
+# Keep the 18 categories in a fixed order
+community_matrix <- community_matrix[, category_order]
+
+cat(
+  "Benthic categories used:",
+  paste(colnames(community_matrix), collapse = ", "),
+  "\nNumber of categories:", ncol(community_matrix), "\n"
+)
 
 # 6. Hellinger transformation ####
 biotic_hell <- decostand(community_matrix, method = "hellinger")
@@ -184,7 +210,8 @@ save(
 )
 
 # 8. PERMANOVA ####
-biotic_meta$island <- factor(biotic_meta$island)
+biotic_meta$island <- factor(biotic_meta$island, 
+                             levels = c("SP", "RA", "FN", "TR"))
 biotic_meta$year <- factor(biotic_meta$year)
 
 # PERMANOVA: spatial effects - Do communities differ among islands?
@@ -211,16 +238,6 @@ perm_interaction <- adonis2(
   by = "terms"
 )
 print(perm_interaction)
-
-# PERMANOVA restricted within sites (nested design)
-perm_site <- adonis2(
-  dist_matrix ~ island * year,
-  data = biotic_meta,
-  permutations = 999,
-  strata = biotic_meta$sites,
-  by = "terms"
-)
-print(perm_site)
 
 # Save PERMANOVA results
 permanova_results <- data.frame(
@@ -260,60 +277,87 @@ var_exp2 <- round(pcoa$eig[2] / sum(positive_eig) * 100, 1)
 
 cat("PCoA variance explained:", var_exp1, "% and", var_exp2, "%\n")
 
-# 11. envfit: project benthic groups onto PCoA ####
+# 11. envfit: project benthic categories  onto PCoA ####
 env_fit <- envfit(
   pcoa_sites[, c("PCoA1", "PCoA2")],
   community_matrix,
   permutations = 999
 )
 envfit_vectors <- as.data.frame(scores(env_fit, display = "vectors"))
-envfit_vectors$species <- rownames(envfit_vectors)
-envfit_vectors$r <- env_fit$vectors$r
+envfit_vectors$category <- rownames(envfit_vectors)
+envfit_vectors$r2 <- env_fit$vectors$r
 envfit_vectors$p <- env_fit$vectors$pvals
 
 # Select significant vectors (p < 0.05)
 sig_vectors <- envfit_vectors %>%
   filter(p < 0.05) %>%
-  arrange(desc(r))
+  arrange(desc(r2))
 
-print("Significant benthic groups (envfit):")
+# Strongest significant vectors displayed in Figure 2B
+plot_vectors <- sig_vectors %>%
+  filter(r2 >= 0.20)
+
+print("Significant benthic categories (envfit):")
 print(sig_vectors)
+print(plot_vectors)
 
 # Save envfit results
 write_csv(envfit_vectors, "results/tables/Table_2_envfit_results.csv")
 
-# 12. Indicator species analysis ####
+# 12. Indicator analysis ####
 # Prepare data for indicator analysis (transect level grouped by island)
 indicator_data <- community_matrix %>%
   rownames_to_column("sample_id") %>%
   left_join(biotic_meta, by = "sample_id")
 
-# Calculate indicator values
-indicator_values <- multipatt(indicator_data[, group_order], 
+# Multilevel pattern analysis allowing associations
+# with individual islands or combinations of islands
+set.seed(123)
+indicator_values <- multipatt(indicator_data[, category_order], 
                               cluster = indicator_data$island, 
                               func = "r.g",
+                              duleg = FALSE,
                               control = how(nperm = 999))
 
-# Extract results
-indicator_summary <- data.frame(
-  group = rownames(indicator_values$sign),
-  stat = indicator_values$sign$stat,
-  p.value = indicator_values$sign$p.value,
-  island = apply(indicator_values$sign[, 1:4], 1, 
-                 function(x) colnames(indicator_values$sign)[which.max(x)])
-) %>%
+# Extract indicator analysis results
+island_cols <- c("s.FN", "s.RA", "s.SP", "s.TR")
+indicator_summary <- indicator_values$sign %>%
+  as.data.frame() %>%
+  mutate(
+    category = rownames(.),
+    association = apply(
+      .[, island_cols],
+      1,
+      function(x) {
+        islands <- sub("s\\.", "", island_cols[x == 1])
+        paste(islands, collapse = " + ")
+      }
+    )
+  ) %>%
+  select(
+    category,
+    association,
+    IndVal = stat,
+    p.value
+  ) %>%
   filter(p.value < 0.05) %>%
-  arrange(desc(stat))
-
-print("Indicator species results:")
+  arrange(association, desc(IndVal))
+print("Indicator analysis results:")
 print(indicator_summary)
 
-write_csv(indicator_summary, "results/tables/Table_3_indicator_species.csv")
+write_csv(indicator_summary, "results/tables/Table_3_indicator_analysis.csv")
 
 # 13. Create PCoA plot ####
 # Define colors and shapes
 island_colors <- c("SP" = "deeppink2", "RA" = "chocolate1", "FN" = "blue1", "TR" = "forestgreen")
 island_shapes <- c("SP" = 15, "RA" = 16, "FN" = 17, "TR" = 18)
+
+#### Adjust SCL label position for readability ####
+plot_vectors_main <- plot_vectors %>%
+  filter(category != "SCL")
+
+plot_vector_scl <- plot_vectors %>%
+  filter(category == "SCL")
 
 pcoa_plot <- ggplot() +
   # Sites (points by island, colored by island)
@@ -324,26 +368,44 @@ pcoa_plot <- ggplot() +
   scale_color_manual(values = island_colors) +
   
   # Significant benthic vectors
-  geom_segment(data = sig_vectors, 
+  geom_segment(data = plot_vectors, 
                aes(x = 0,
-                   xend = PCoA1 * 0.25,
+                   xend = PCoA1 * 0.30,
                    y = 0,
-                   yend = PCoA2 * 0.25),
+                   yend = PCoA2 * 0.30),
                color = "grey50",
                linewidth = 0.7,
-               linetype = "dashed") +
+               linetype = "dashed",
+               arrow = arrow(length = grid::unit(0.15, "cm"))
+) +
   
-  geom_text_repel(data = sig_vectors, 
-                  aes(x = PCoA1 * 0.27,
-                      y = PCoA2 * 0.27,
-                      label = species),
+  geom_text_repel(data = plot_vectors_main, 
+                  aes(x = PCoA1 * 0.33,
+                      y = PCoA2 * 0.33,
+                      label = category),
                   color = "grey30",
                   size = 3.5,
                   fontface = "bold",
-                  box.padding = 0.5,
-                  point.padding = 0.3,
+                  box.padding = 0.6,
+                  point.padding = 0.4,
                   min.segment.length = 0,
-                  segment.color = "grey50") +
+                  segment.color = "grey50",
+                  max.overlaps = Inf
+                  ) +
+    #Adjust SCL label position for readability
+    # Manually reposition SCL label to avoid overlap with data points;
+    # vector coordinates remain unchanged.
+                  geom_text(
+                  data = plot_vector_scl,
+                  aes(
+                  x = PCoA1 * 0.33 + 0.035,
+                  y = PCoA2 * 0.33 - 0.015,
+                  label = category
+                  ),
+                  color = "grey30",
+                  size = 3.5,
+                  fontface = "bold"
+                  ) +
   
   # Axes
   labs(x = paste0("PCoA 1 (", var_exp1, "%)"),
@@ -356,10 +418,11 @@ pcoa_plot <- ggplot() +
   theme(
     axis.text = element_text(color = "black", size = 10),
     axis.title = element_text(size = 12, face = "bold"),
-    legend.position = c(0.9, 0.85),
+    legend.position = "right",
+    legend.direction = "vertical",
     legend.title = element_blank(),
     legend.text = element_text(size = 10),
-    legend.background = element_rect(fill = "white", color = NA),
+    legend.background = element_rect( color = NA),
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
   )
 
@@ -367,10 +430,10 @@ print(pcoa_plot)
 
 # 14. Save PCoA plot ####
 ggsave("results/figures/Figure_2B_PCoA_ordination.png",
-       plot = pcoa_plot, width = 6, height = 6, dpi = 300)
+       plot = pcoa_plot, width = 7, height = 6, dpi = 300)
 
 ggsave("results/figures/Figure_2B_PCoA_ordination.tiff",
-       plot = pcoa_plot, width = 6, height = 6, dpi = 300, compression = "lzw")
+       plot = pcoa_plot, width = 7, height = 6, dpi = 300, compression = "lzw")
 
 # 15. Print session info for reproducibility ####
 sessionInfo()

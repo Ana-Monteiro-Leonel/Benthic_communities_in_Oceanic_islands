@@ -1,100 +1,92 @@
-# Benthic_communities_in_Oceanic_islands
-
+# Benthic communities in Southwestern Atlantic oceanic islands
 https://doi.org/10.5281/zenodo.21890794
 
 Data and R scripts for analyzing benthic communities across Southwestern Atlantic oceanic islands
-# Benthic communities in Southwestern Atlantic oceanic islands
+
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+
 
 ## 📖 About
 
-The benthic community is essential to reef ecosystems, contributing to their biodiversity and complexity. In the Southwest Atlantic, the Epilithic Algae Matrix (EAM) and macroalgae are the most abundant components, including in better-conserved areas such as the Brazilian oceanic islands: 
+Benthic communities are essential components of reef ecosystems, contributing to their biodiversity, functioning, and structural complexity. This repository contains the data, analytical scripts, and outputs used to investigate benthic community structure across four Brazilian oceanic islands:
 
-- **São Pedro and São Paulo Archipelago** (SP)
-- **Rocas Atoll** (RA)  
+- **St. Peter and St. Paul Archipelago** (SP)
+- **Rocas Atoll** (RA)
 - **Fernando de Noronha Archipelago** (FN)
 - **Trindade Island** (TR)
 
 ## 🎯 Objective
 This study aims to:
-•	Quantify spatial and temporal variation in benthic community structure across four Southwestern Atlantic oceanic islands (SP, RA, FN, TR)
-•	Identify environmental drivers (wave power, SST, PAR, POC) shaping community composition using multivariate analyses (PERMANOVA, PCoA, dbRDA)
-•	Assess temporal trends (2013-2019) in dominant benthic functional groups using Mann-Kendall tests
-• Identify indicator taxa characteristic of each island
+- Quantify spatial and temporal variation in benthic community structure across four Southwestern Atlantic oceanic islands (SP, RA, FN, TR).
+- Identify environmental variables associated with community composition (wave power, SST, PAR, POC) using multivariate analyses (PERMANOVA, PCoA, dbRDA).
+- Assess temporal trends (2013–2019) in dominant benthic functional groups using Mann–Kendall tests.
+- Identify benthic categories associated with each island or combinations of islands.
 
 ## 📊 Methods
 
-Shallow reefs were sampled annually between 2013-2019 using photo-quadrats collected along semi-fixed transects. 
-Benthic cover was:
-•	Identified at the image level
-•	Aggregated to the transect level (used as the sampling unit to avoid pseudoreplication)
-•	Grouped into morphofunctional categories
+Shallow reefs were sampled using photo-quadrats collected along semi-fixed transects. Benthic cover was identified at the image level and aggregated at the transect level, with transects used as the sampling units for community-level analyses.
 
-**Community composition analyses** were based on transect-level abundance data and included:
-- PERMANOVA (vegan::adonis2) to test for differences among islands, years, and their interaction
-- PCoA (vegan::cmdscale) for ordination
-- envfit to correlate benthic groups with ordination axes
-- Indicator Species Analysis (indicspecies) to identify taxa characteristic of each island
-- Distance-based Redundancy Analysis (dbRDA) to identify environmental drivers (wave, SST, PAR, POC)
+### Community composition and ordination
 
+PERMANOVA, PCoA, envfit, and indicator analyses were performed using **18 benthic categories**, comprising **17 biological categories plus abiotic substrate (ABI)**.
+
+The analyses included:
+
+- **PERMANOVA** (`vegan::adonis2`) to test differences among islands, years, and their interaction.
+- **PCoA** for visualization of benthic community differences among islands.
+- **envfit** to evaluate associations between individual benthic categories and the ordination.
+- **Indicator analysis** (`indicspecies`) to identify benthic categories associated with individual islands or combinations of islands.
+
+### Environmental drivers
+
+Distance-based Redundancy Analysis (**dbRDA**) was used to evaluate relationships between benthic community composition and environmental variables (wave power, SST, PAR, and POC).
+
+For the dbRDA, benthic cover was summarized into **10 broader benthic groups**:
+
+- Epilithic Algal Matrix (EAM)
+- Macroalgae (MAL)
+- Crustose Coralline Algae (CCA)
+- Articulated Coralline Algae (ACA)
+- Scleractinian corals (SCL)
+- Abiotic substrate (ABI)
+- Invertebrates (INV)
+- Zoanthids (ZOA)
+- Cyanobacteria (CYA)
+- Suspension feeders (SUS)
+
+The dbRDA was based on mean annual benthic cover for each island × year combination.
+
+### Temporal trends
 Temporal trends were assessed using:
-•	LOESS smoothing for visualization
-•	Mann–Kendall trend test applied to observed (non-standardized) annual mean cover values derived from transect-level aggegation, ensuring independence among observations
-•	Sen’s slope estimator to quantify trend magnitude
+- LOESS smoothing for visualization.
+- Mann–Kendall trend tests applied to observed (non-standardized) annual mean cover values derived from transect-level aggregation, ensuring independence among observations.
+- Sen’s slope estimator to quantify trend magnitude.
+
 This approach ensures that trends reflect real ecological changes rather than artifacts of data standardization.
 
 
-## 🔬 Key Results
-📊 Benthic Richness and Composition
-Island	                      Richness	            Dominant Groups	                        Distinctive Feature
-SP (St. Peter and St. Paul)	  23 taxa	              EAM, Macroalgae, Suspension feeders	    Uniquely structured by Palythoa caribaeorum (10.2% cover)
-RA (Rocas Atoll)	            62 taxa	              EAM (29.6%), Macroalgae (18.6%)	        High richness, similar to FN
-FN (Fernando de Noronha)	    48 taxa	              EAM (43.7%), Macroalgae (26.3%)	        Coral resilience despite regional stressors
-TR (Trindade)	                35 taxa	              Macroalgae (~27%), EAM (16%)	          Most distinct assemblage, high abiotic cover
+## Main Results
 
-🌊 Environmental Drivers
-* Wave power emerged as the primary factor structuring benthic communities at Trindade, overriding temperature effects
-* Temperature, photosynthetic active radiation (PAR), and water transparency explained compositional differences among islands
-* Geographic proximity and shared environmental forcing link FN and RA assemblages
+The analyses revealed strong spatial differentiation in benthic community structure among the four oceanic islands, with island identity explaining substantially more variation than temporal differences.
 
-📈 Temporal Trajectories (2013-2019)
-Island	Trend	Key Observation
-SP	  Significant increase in macroalgae; Decline in zoanthids
-RA	  Consistent but non-significant trends
-FN	  Benthic decline	Episodic cyanobacterial blooms; corals remain resilient
-TR	  Consistent but non-significant trends
+The environmental analysis indicated distinct relationships between benthic community composition and environmental conditions among islands. Wave exposure was particularly associated with the benthic structure of Trindade, whereas other environmental variables, including POC, SST, and PAR, contributed to differences among islands.
 
-🎯 Main Takeaways
-✅ Island-specific trajectories: Each island follows its own benthic path
-✅ MAL expands in SP
-✅ Algal reorganization (RA, TR)
-✅ Corals resilient in Noronha despite environmental stress
-✅ Wave power, not temperature, drives Trindade's benthic composition
+Temporal trajectories were island-specific. Significant temporal changes were detected for some dominant groups, whereas other apparent trajectories were not statistically significant over the monitoring period.
 
-🎯 Final Remarks
+These results emphasize that Brazilian oceanic islands should not be considered a single homogeneous reef system, but rather as distinct benthic communities shaped by local environmental conditions and temporal dynamics.
+
+###  Final Remarks
 As sentinels of the South Atlantic, these islands record not only the history of their impacts, but also the potential for their recovery. The unfolding of this story will depend on the continuity of monitoring and the effectiveness of recently implemented protection measures.
 
 ## 📁 Repository Structure
-Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
-
+```text
+Benthic_communities_in_Oceanic_islands/
 ├── data/
-
 │   ├── raw/
-
 │   │   ├── benthic_complete_data.csv
-
 │   │   └── environment.csv
-
 │   └── processed/
-
-│       ├── benthic_cover_photos.csv
-
-│       ├── benthic_cover_transects.csv
-
-│       └── benthic_cover_summary.csv
-
 ├── code/
 │   ├── 01_benthic_composition.R
 │   ├── 02_ordination.R
@@ -104,47 +96,62 @@ Benthic_communities_in_Southwestern_Atlantic_oceanic_islands/
 │   ├── 06_temporal_trends_FN_transect.R
 │   ├── 07_temporal_trends_TR_transect.R
 │   └── functions_transect.R
-
 ├── results/
 │   ├── figures/
 │   └── tables/
-
 └── README.md
-
+```
 ## 🚀 How to Reproduce
-⚠️ Important: Set your working directory to the project root before running scripts.
+Set the working directory to the project root before running the scripts.
+
 Example:
-setwd("path/to/Benthic_communities_in_Southwestern_Atlantic_oceanic_islands")
+```r
+setwd("path/to/Benthic_communities_in_Oceanic_islands")
+```
+The scripts should be run in numerical order:
 
-All analyses were performed in R version 4.2.3. Scripts should be run in numerical order:
+1. `01_benthic_composition.R` — Data processing and benthic composition.
+2. `02_ordination.R` — PERMANOVA, PCoA, envfit, and indicator analysis using 18 benthic categories.
+3. `03_dbRDA.R` — Distance-based Redundancy Analysis using 10 broader benthic groups and environmental variables.
+4. `04_temporal_trends_SP_transect.R` — Temporal trends for SP.
+5. `05_temporal_trends_RA_transect.R` — Temporal trends for RA.
+6. `06_temporal_trends_FN_transect.R` — Temporal trends for FN.
+7. `07_temporal_trends_TR_transect.R` — Temporal trends for TR.
 
-1. `01_benthic_composition.R` — Data processing and stacked bar plot
-2. `02_ordination.R` — PCoA, PERMANOVA (island, year, interaction, and site-stratified), envfit, and indicator species
-3. `03_dbRDA.R` — Distance-based Redundancy Analysis
-4. `04_07_temporal_trends_*_transect.R` — Temporal trends per island (LOESS + Mann-Kendall)
-
-Custom functions are available in `functions_transect.R`.
-Note: Scripts `01` to `03` cover community composition analyses (including PERMANOVA, PCoA, dbRDA, and indicator species). Scripts `04` to `07` cover temporal trend analyses for each island (SP, RA, FN, TR). Custom functions are available in `functions_transect.R`.
+Custom functions used by the temporal analyses are available in `functions_transect.R`.
 
 ## 📦 Dependencies
 
-- R (version ≥ 4.0.0)
-- Key packages: "vegan", "ggplot2", "dplyr", "tidyr", "readr", "ggrepel", "indicspecies", "patchwork", "zyp", "zoo"
+Analyses were performed in R. Key packages include:
+
+- `vegan`
+- `ggplot2`
+- `dplyr`
+- `tidyr`
+- `readr`
+- `ggrepel`
+- `indicspecies`
+- `patchwork`
+- `zyp`
+- `zoo`
 
 ## 📝 Citation
 
-If you use this data or code, please cite:
+If you use these data or scripts, please cite the associated Zenodo repository:
 
-[To be added upon publication]
+DOI: 10.5281/zenodo.21890794
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## 📬 Contact
 
-[Ana Monteiro-Leonel] - [anamonteiroleonel@alumni.usp.br]
+**Ana Monteiro-Leonel**  
+anamonteiroleonel@alumni.usp.br
 
 ## 🙏 Acknowledgments
 
-This study was financed in part by the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior - Brasil (CAPES) - Finance Code 001. Ana Monteiro-Leonel acknowledges funding from CAPES Processo PROEX: 88887358027/2019-00. Tito Lotufo CNPq grant number 443318/2019-0. We also thank the members of the PELD ILOC program for providing the benthic data collected over the years, as well as the many researchers involved in the sampling efforts. We are grateful to ICMBio for granting the sampling authorization (SISBio #41327-54, CELF). We also thank the Brazilian Navy for logistical support at the São Pedro and São Paulo Archipelago and Trindade Island. Financial support was also provided by CNPq for sampling (grant numbers #441750/2024-9 and #446005/2024-0, CELF). We thank the anonymous referees for their valuable comments.
+This study was financed in part by the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior - Brasil (CAPES) - Finance Code 001. Ana Monteiro-Leonel acknowledges funding from CAPES Processo PROEX: 88887358027/2019-00. Tito Lotufo acknowledges CNPq grant number 443318/2019-0.
+We thank the members of the PELD ILOC program for providing the benthic data collected over the years, as well as the many researchers involved in the sampling efforts. We are grateful to ICMBio for granting the sampling authorization (SISBio #41327-54, CELF) and to the Brazilian Navy for logistical support at the St. Peter and St. Paul Archipelago and Trindade Island.
+Financial support was also provided by CNPq for sampling (grant numbers #441750/2024-9 and #446005/2024-0, CELF). We thank the anonymous reviewers for their valuable comments.

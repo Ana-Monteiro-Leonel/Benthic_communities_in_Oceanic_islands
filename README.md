@@ -21,7 +21,7 @@ This study aims to:
 - Quantify spatial and temporal variation in benthic community structure across four Southwestern Atlantic oceanic islands (SP, RA, FN, TR).
 - Identify environmental variables associated with community composition (wave power, SST, PAR, POC) using multivariate analyses (PERMANOVA, PCoA, dbRDA).
 - Assess temporal trends (2013–2019) in dominant benthic functional groups using Mann–Kendall tests.
-- Identify benthic categories associated with each island or combinations of islands.
+- Explore benthic categories associated with individual islands or combinations of islands.
 
 ## 📊 Methods
 
@@ -60,11 +60,8 @@ The dbRDA was based on mean annual benthic cover for each island × year combina
 ### Temporal trends
 Temporal trends were assessed using:
 - LOESS smoothing for visualization.
-- Mann–Kendall trend tests applied to observed (non-standardized) annual mean cover values derived from transect-level aggregation, ensuring independence among observations.
+- Mann–Kendall trend tests applied to observed (non-standardized) annual mean cover values derived from transect-level aggregation.
 - Sen’s slope estimator to quantify trend magnitude.
-
-This approach ensures that trends reflect real ecological changes rather than artifacts of data standardization.
-
 
 ## Main Results
 

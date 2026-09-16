@@ -241,7 +241,7 @@ create_trend_plot <- function(result, group_name) {
       breaks = y_breaks,  # ONLY BREAKS UP TO DATA
       expand = expansion(mult = c(0.05, 0.05))
     ) +
-    labs(x = NULL, y = "Relative benthic cover (% yr⁻¹)") +
+    labs(x = NULL, y = "Relative benthic cover (%)") +
     theme_mk_plots() +
     theme(plot.margin = margin(t = 20, r = 10, b = 10, l = 10)) +
     annotate("text", x = min_year, y = annotation_y_tau, 
